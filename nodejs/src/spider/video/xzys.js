@@ -87,13 +87,21 @@ async function detail(inReq, _outResp) {
     "vod_id": inReq.body.id,
   }
   
-  let content_html = $('.article-content').html()
+  // 查找所有网盘分享链接
+  let panLinks = []
+  $('.col-md-9 .article-box p').each((_, e) => {
+    const name = $(e).find('.btn-info').text()
+    const panShareUrl = $(e).find('a').attr('href')
+    
+    // 匹配夸克、阿里、UC、115、天翼等网盘
+    if (/夸克|阿里|UC|115|天翼/.test(name)) {
+      panLinks.push(panShareUrl)
+    }
+  })
   
-  // Find cloud disk links, prioritizing Quark, Ali, UC, 115, Tianyi
-  let link = content_html.match(/https:\/\/(pan\.quark\.cn|aliyundrive\.com|115\.com|caiyun\.139\.com)[^\s<>"']+/i);
-  
-  if (link && link[0]) {
-    const vodFromUrl = await _detail(link[0]);
+  // 如果找到链接，使用第一个链接获取播放信息
+  if (panLinks.length > 0) {
+    const vodFromUrl = await _detail(panLinks[0]);
     if (vodFromUrl){
       vod.vod_play_from = vodFromUrl.froms;
       vod.vod_play_url = vodFromUrl.urls;
