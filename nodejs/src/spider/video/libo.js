@@ -18,17 +18,6 @@ async function getHtml(config) {
   }
 }
 
-async function request(reqUrl) {
-  const resp = await req.get(reqUrl, {
-    headers: {
-      'User-Agent': PC_UA,
-      'Referer': 'https://libvio.mov/',
-      'Origin': 'https://libvio.mov'
-    },
-  });
-  return resp;
-}
-
 const pq = (html) => {
   const jsp = new jsoup();
   return jsp.pq(html);
@@ -56,7 +45,13 @@ async function category(inReq, _outResp) {
   if (page == 0) page = 1;
 
   const url = `https://libvio.mov/type/${tid}-${page}.html`;
-  let html = await request(url);
+  let html = await req.get(url, {
+    headers: {
+      'User-Agent': PC_UA,
+      'Referer': 'https://libvio.mov/',
+      'Origin': 'https://libvio.mov'
+    }
+  });
   const $ = pq(html);
   
   let videos = [];
@@ -85,7 +80,13 @@ async function category(inReq, _outResp) {
 
 async function detail(inReq, _outResp) {
   const url = `https://libvio.mov${inReq.body.id}`;
-  let html = await request(url);
+  let html = await req.get(url, {
+    headers: {
+      'User-Agent': PC_UA,
+      'Referer': 'https://libvio.mov/',
+      'Origin': 'https://libvio.mov'
+    }
+  });
   const $ = pq(html);
   
   let vod = {
@@ -94,23 +95,23 @@ async function detail(inReq, _outResp) {
     "vod_content": $('.stui-content__detail .desc').text().trim(),
   }
 
-  let playInfo = html.match(/var player_.*?=(.*?)</);
-  if (playInfo && playInfo[1]) {
-    let playerData = JSON.parse(playInfo[1]);
-    let playUrl = playerData.url;
-    
-    const trackList = [];
-    $('.stui-vodlist__head').each((_, head) => {
-      let title = $(head).find('.stui-pannel__head').text().trim();
-      if (!title.includes('下载')) {
-        $(head).find('.stui-content__playlist li').each((_, li) => {
-          trackList.push(`${$(li).text()}$${$(li).find('a').attr('href')}`);
-        });
+  const playList = [];
+  $('.stui-vodlist__head').each((_, head) => {
+    let title = $(head).find('.stui-pannel__head').text().trim();
+    if (!title.includes('下载')) {
+      const tracks = [];
+      $(head).find('.stui-content__playlist li').each((_, li) => {
+        tracks.push(`${$(li).text()}$${$(li).find('a').attr('href')}`);
+      });
+      if (tracks.length > 0) {
+        playList.push(tracks.join('#'));
       }
-    });
+    }
+  });
 
+  if (playList.length > 0) {
     vod.vod_play_from = '线路';
-    vod.vod_play_url = trackList.join('#');
+    vod.vod_play_url = playList.join('$$$');
   }
 
   return {
@@ -131,7 +132,13 @@ async function search(inReq, _outResp) {
   }
 
   const url = `https://libvio.mov/search/-------------.html?wd=${encodeURIComponent(wd)}&submit=`;
-  let html = await request(url);
+  let html = await req.get(url, {
+    headers: {
+      'User-Agent': PC_UA,
+      'Referer': 'https://libvio.mov/',
+      'Origin': 'https://libvio.mov'
+    }
+  });
   const $ = pq(html);
   
   let videos = [];
@@ -154,7 +161,7 @@ async function search(inReq, _outResp) {
 export default {
   meta: {
     key: 'libvio',
-    name: '立播',
+    name: 'LIBVIO',
     type: 3,
   },
   api: async (fastify) => {
