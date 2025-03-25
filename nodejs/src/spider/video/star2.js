@@ -1,24 +1,11 @@
 import req from '../../util/req.js';
 import {init, proxy, play, detail as _detail} from '../../util/pan.js';
 import {jsoup} from "../../util/htmlParser.js";
-import axios from "axios";
+import {load} from 'cheerio';
 import {PC_UA} from "../../util/misc.js";
 
-const url = 'https://xzys.fun'
 const FIXED_PIC = 'https://bkimg.cdn.bcebos.com/pic/d1a20cf431adcbefe0769094aeaf2edda2cc9fe6'
-
-const pq = (html) => {
-  const jsp = new jsoup();
-  return jsp.pq(html);
-}
-const classes = [
-  {type_id: 'dsj', type_name: '电视剧', type_pic: FIXED_PIC},
-  {type_id: 'dy', type_name: '电影', type_pic: FIXED_PIC},
-  {type_id: 'dm', type_name: '动漫', type_pic: FIXED_PIC},
-  {type_id: 'jlp', type_name: '纪录片', type_pic: FIXED_PIC},
-  {type_id: 'zy', type_name: '综艺', type_pic: FIXED_PIC},
-]
-const tags = classes.map(item => item.type_name)
+const url = 'https://xzys.fun'
 
 async function request(reqUrl, options = {}) {
   const resp = await req.get(reqUrl, {
@@ -32,6 +19,13 @@ async function request(reqUrl, options = {}) {
 }
 
 async function home(_inReq, _outResp) {
+  let classes = [
+    {type_id: 'dsj', type_name: '电视剧'},
+    {type_id: 'dy', type_name: '电影'},
+    {type_id: 'dm', type_name: '动漫'},
+    {type_id: 'jlp', type_name: '纪录片'},
+    {type_id: 'zy', type_name: '综艺'},
+  ];
   let filterObj = {};
   return ({
     class: classes,
@@ -44,11 +38,7 @@ async function category(inReq, _outResp) {
     const id = inReq.body.tid;
 
     const categoryUrl = `${url}/${id}_${pg}`
-    const { data } = await req.get(categoryUrl, {
-        headers: {
-            'User-Agent': PC_UA,
-        },
-    });
+    const data = await request(categoryUrl);
 
     const $ = new jsoup().pq(data);
 
@@ -77,17 +67,15 @@ async function category(inReq, _outResp) {
     return {
         page: pg,
         pagecount: 1,
+        limit: 72,
+        total: 72,
         list: cards,
     };
 }
 
 async function detail(inReq, _outResp) {
     const detailUrl = `${url}${inReq.body.id}`;
-    const { data } = await req.get(detailUrl, {
-        headers: {
-            'User-Agent': PC_UA,
-        },
-    });
+    const data = await request(detailUrl);
 
     const $ = new jsoup().pq(data);
 
@@ -119,11 +107,7 @@ async function search(inReq, _outResp) {
     let text = encodeURIComponent(wd);
     let searchUrl = `${url}/search/?keyword=${text}&page=${pg}`
 
-    const { data } = await req.get(searchUrl, {
-        headers: {
-            'User-Agent': PC_UA,
-        },
-    });
+    const data = await request(searchUrl);
 
     const $ = new jsoup().pq(data);
     
@@ -151,7 +135,7 @@ async function search(inReq, _outResp) {
 
     return {
         page: pg,
-        pagecount: 1,
+        pagecount: cards.length < 10 ? pg : pg + 1,
         list: cards,
     };
 }
