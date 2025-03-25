@@ -4,9 +4,6 @@ import {jsoup} from "../../util/htmlParser.js";
 import axios from "axios";
 import {PC_UA} from "../../util/misc.js";
 
-const cheerio = createCheerio();
-const CryptoJS = createCryptoJS();
-
 async function getHtml(config) {
   try {
     return await axios.request(typeof config === "string" ? config : {
@@ -41,10 +38,6 @@ const pq = (html) => {
   return jsp.pq(html);
 }
 
-const appConfig = {
-  site: "https://www.tianyiso.com",
-}
-
 async function home(_inReq, _outResp) {
   let classes = [
     {type_id: '搜索', type_name: '天逸搜索'},
@@ -71,17 +64,23 @@ async function category(inReq, _outResp) {
 }
 
 async function detail(inReq, _outResp) {
-  const url = appConfig.site + inReq.body.id;
+  const url = `https://www.tianyiso.com/${inReq.body.id}`;
   let html = await request(url);
   const $ = pq(html);
   
-  let pan = html.match(/"(https:\/\/cloud\.189\.cn\/t\/.*)",/)[1];
+  let link = html.match(/"(https:\/\/cloud\.189\.cn\/t\/.*)",/);
   
   let vod = {
     "vod_name": $('template').first().text().trim(),
     "vod_id": inReq.body.id,
-    "vod_play_from": "网盘",
-    "vod_play_url": pan,
+  }
+
+  if (link && /cloud.189.cn/.test(link[1])) {
+    const vodFromUrl = await _detail(link[1]);
+    if (vodFromUrl){
+      vod.vod_play_from = vodFromUrl.froms;
+      vod.vod_play_url = vodFromUrl.urls;
+    }
   }
 
   return {
@@ -101,7 +100,7 @@ async function search(inReq, _outResp) {
     };
   }
 
-  const url = appConfig.site + `/search?k=${encodeURIComponent(wd)}`
+  const url = `https://www.tianyiso.com/search?k=${encodeURIComponent(wd)}`;
   let html = (await getHtml(url)).data;
   const $ = pq(html);
   
