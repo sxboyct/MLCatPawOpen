@@ -87,21 +87,23 @@ async function detail(inReq, _outResp) {
     "vod_id": inReq.body.id,
   }
   
-  // 查找所有网盘分享链接
-  let panLinks = []
+  // 直接复制原 xzys.js 的网盘链接提取逻辑
+  let tracks = []
   $('.col-md-9 .article-box p').each((_, e) => {
     const name = $(e).find('.btn-info').text()
     const panShareUrl = $(e).find('a').attr('href')
     
-    // 匹配夸克、阿里、UC、115、天翼等网盘
     if (/夸克|阿里|UC|115|天翼/.test(name)) {
-      panLinks.push(panShareUrl)
+      tracks.push({
+        name: name.trim(),
+        pan: panShareUrl,
+      })
     }
   })
   
   // 如果找到链接，使用第一个链接获取播放信息
-  if (panLinks.length > 0) {
-    const vodFromUrl = await _detail(panLinks[0]);
+  if (tracks.length > 0) {
+    const vodFromUrl = await _detail(tracks[0].pan);
     if (vodFromUrl){
       vod.vod_play_from = vodFromUrl.froms;
       vod.vod_play_url = vodFromUrl.urls;
