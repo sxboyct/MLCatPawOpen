@@ -8,8 +8,8 @@ async function getHtml(config) {
     const resp = await req.get(config, {
       headers: {
         'User-Agent': PC_UA,
-        'Referer': 'https://www.libvio.cc/',
-        'Origin': 'https://www.libvio.cc'
+        'Referer': 'https://libvio.mov/',
+        'Origin': 'https://libvio.mov'
       }
     });
     return resp;
@@ -22,8 +22,8 @@ async function request(reqUrl) {
   const resp = await req.get(reqUrl, {
     headers: {
       'User-Agent': PC_UA,
-      'Referer': 'https://www.libvio.cc/',
-      'Origin': 'https://www.libvio.cc'
+      'Referer': 'https://libvio.mov/',
+      'Origin': 'https://libvio.mov'
     },
   });
   return resp;
@@ -55,7 +55,7 @@ async function category(inReq, _outResp) {
   let page = pg || 1;
   if (page == 0) page = 1;
 
-  const url = `https://www.libvio.cc/type/${tid}-${page}.html`;
+  const url = `https://libvio.mov/type/${tid}-${page}.html`;
   let html = await request(url);
   const $ = pq(html);
   
@@ -84,7 +84,7 @@ async function category(inReq, _outResp) {
 }
 
 async function detail(inReq, _outResp) {
-  const url = `https://www.libvio.cc${inReq.body.id}`;
+  const url = `https://libvio.mov${inReq.body.id}`;
   let html = await request(url);
   const $ = pq(html);
   
@@ -130,7 +130,7 @@ async function search(inReq, _outResp) {
     };
   }
 
-  const url = `https://www.libvio.cc/search/-------------.html?wd=${encodeURIComponent(wd)}&submit=`;
+  const url = `https://libvio.mov/search/-------------.html?wd=${encodeURIComponent(wd)}&submit=`;
   let html = await request(url);
   const $ = pq(html);
   
