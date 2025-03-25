@@ -10,19 +10,19 @@ const appConfig = {
 	site: 'https://1.star2.cn',
 	tabs: [
 		{
-			name: '電影',
+			name: '电影',
 			ext: {
 				id: 'mv',
 			},
 		},
 		{
-			name: '国劇',
+			name: '国剧',
 			ext: {
 				id: 'ju',
 			},
 		},
 		{
-			name: '外劇',
+			name: '外剧',
 			ext: {
 				id: 'wj',
 			},
@@ -46,13 +46,13 @@ const appConfig = {
 			},
 		},
 		{
-			name: '動漫',
+			name: '动漫',
 			ext: {
 				id: 'dm',
 			},
 		},
 		{
-			name: '綜藝',
+			name: '综艺',
 			ext: {
 				id: 'zy',
 			},
