@@ -202,3 +202,4 @@ export default {
         fastify.post('/search', search);
         fastify.get('/proxy/:site/:what/:flag/:shareId/:fileId/:end', proxy);
     },
+}
