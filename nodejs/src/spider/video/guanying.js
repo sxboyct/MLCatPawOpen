@@ -148,12 +148,6 @@ async function detail(inReq, _outResp) {
   };
 }
 
-async function play(inReq, _outResp) {
-  return {
-    url: inReq.body.url
-  };
-}
-
 async function search(inReq, _outResp) {
   const pg = inReq.body.page || 1;
   const wd = inReq.body.wd;
