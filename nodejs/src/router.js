@@ -12,8 +12,9 @@ import wogg from "./spider/video/wogg.js";
 import zhizhen from "./spider/video/zhizhen.js";
 import tgsou from "./spider/video/tgsou.js";
 import douban from "./spider/video/douban.js";
+import guanying from "./spider/video/guanying.js";
 
-const spiders = [douban, duoduo, mogg, leijing, tianyisou, panta, libo, star2, seedhub, xzys, wogg, zhizhen, tgsou, baseset];
+const spiders = [douban, duoduo, mogg, leijing, tianyisou, panta, libo, star2, seedhub, guanying, xzys, wogg, zhizhen, tgsou, baseset];
 const spiderPrefix = '/spider';
 
 /**
