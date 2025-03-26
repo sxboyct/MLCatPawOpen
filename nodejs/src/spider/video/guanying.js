@@ -5,8 +5,10 @@ import axios from "axios";
 import {PC_UA} from "../../util/misc.js";
 import {Yun} from "../../util/yun.js";
 
-const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/604.1.14 (KHTML, like Gecko)';
 const url = 'https://www.gying.org';
+const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/604.1.14 (KHTML, like Gecko)';
+
+let globalCookies = null;
 
 async function getHtml(config) {
   try {
@@ -14,7 +16,8 @@ async function getHtml(config) {
       url: config.url,
       method: config.method || 'GET',
       headers: config.headers || {
-        'User-Agent': UA
+        'User-Agent': UA,
+        'Cookie': globalCookies ? globalCookies.join('; ') : ''
       },
       data: config.data || '',
       responseType: config.responseType || '',
@@ -24,18 +27,19 @@ async function getHtml(config) {
   }
 }
 
-async function request(reqUrl, options = {}) {
+async function request(reqUrl) {
   const resp = await req.get(reqUrl, {
     headers: {
       'User-Agent': UA,
-      ...options.headers
+      'Cookie': globalCookies ? globalCookies.join('; ') : ''
     },
-    ...options
   });
   return resp.data;
 }
 
 async function login() {
+  if (globalCookies) return globalCookies;
+
   const loginUrl = `${url}/user/login`;
   const loginData = {
     siteid: '1',
@@ -53,7 +57,8 @@ async function login() {
       },
       maxRedirects: 0
     });
-    return response.headers['set-cookie'];
+    globalCookies = response.headers['set-cookie'];
+    return globalCookies;
   } catch (error) {
     console.error('Login failed:', error);
     return null;
@@ -62,13 +67,14 @@ async function login() {
 
 const classes = [
   {type_id: '/mv/------', type_name: '电影'},
-  {type_id: '/tv/------', type_name: '剧集'},
+  {type_id: '/tv/------', type_name: '电视剧'},
   {type_id: '/ac/------', type_name: '动漫'}
 ];
 
 const tags = classes.map(item => item.type_name);
 
 async function home(_inReq, _outResp) {
+  await login();
   let filterObj = {};
   return ({
     class: classes,
@@ -77,18 +83,13 @@ async function home(_inReq, _outResp) {
 }
 
 async function category(inReq, _outResp) {
+  await login();
   const tid = inReq.body.id;
   const pg = inReq.body.page;
   let page = pg || 1;
   if (page == 0) page = 1;
 
-  const loginCookies = await login();
-  let html = await request(`${url}${tid}${page}`, {
-    headers: {
-      'Cookie': loginCookies ? loginCookies.join('; ') : ''
-    }
-  });
-
+  let html = await request(`${url}${tid}${page}`);
   const $ = new jsoup().pq(html);
   let videos = [];
 
@@ -124,15 +125,10 @@ async function category(inReq, _outResp) {
 }
 
 async function detail(inReq, _outResp) {
-  const loginCookies = await login();
-  const detailUrl = `${url}/res/downurl${inReq.body.id}`;
-  let detailResp = await request(detailUrl, {
-    headers: {
-      'Cookie': loginCookies ? loginCookies.join('; ') : ''
-    }
-  });
+  await login();
+  let html = await request(`${url}/res/downurl${inReq.body.id}`);
+  const respstr = JSON.parse(html);
 
-  const respstr = JSON.parse(detailResp);
   let vod = {
     "vod_name": inReq.body.id,
     "vod_id": inReq.body.id,
@@ -149,16 +145,11 @@ async function detail(inReq, _outResp) {
 }
 
 async function search(inReq, _outResp) {
+  await login();
   const pg = inReq.body.page || 1;
   const wd = inReq.body.wd;
   
-  const loginCookies = await login();
-  let html = await request(`${url}/s/1---${pg}/${encodeURIComponent(wd)}`, {
-    headers: {
-      'Cookie': loginCookies ? loginCookies.join('; ') : ''
-    }
-  });
-
+  let html = await request(`${url}/s/1---${pg}/${encodeURIComponent(wd)}`);
   const $ = new jsoup().pq(html);
   let videos = [];
 
