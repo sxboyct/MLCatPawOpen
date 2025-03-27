@@ -46,14 +46,24 @@ async function category(inReq, _outResp) {
             Referer: appConfig.site
         }
     });
-    const $ = pq(data);
+     const $ = pq(data);
     
-    const videos = [];
-    const scriptContent = $('script').filter((_, script) => $(script).html().includes('_obj.header')).html();
+    const scriptContent = $('script').filter((_, script) => 
+        $(script).html().includes('_obj.header')
+    ).html();
+
+    // 修复点：正确提取JSON数据
     const jsonStart = scriptContent.indexOf('{');
     const jsonEnd = scriptContent.lastIndexOf('}') + 1;
-    const inlistData = JSON.parse(scriptContent.slice(jsonStart, jsonEnd).inlist;
+    const jsonString = scriptContent.slice(jsonStart, jsonEnd);
+    
+    // 新增：使用正则匹配_obj.inlist
+    const inlistMatch = jsonString.match(/_obj\.inlist=({.*});/);
+    if (!inlistMatch) throw new Error("未找到 _obj.inlist 数据");
+    
+    const inlistData = JSON.parse(inlistMatch[1]);  // 正确解析层级
 
+    const videos = [];
     inlistData.i.forEach((item, index) => {
         videos.push({
             vod_name: inlistData.t[index],
