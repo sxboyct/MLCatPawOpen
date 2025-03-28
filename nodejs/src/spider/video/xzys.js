@@ -79,37 +79,35 @@ async function category(inReq, _outResp) {
 }
 
 async function detail(inReq, _outResp) {
-  let html = await request(`${url}/${inReq.body.id}`)
-  const $ = pq(html)
+  let html = await request(`${url}/${inReq.body.id}`);
+  const $ = pq(html);
   
   let vod = {
     "vod_name": $('.article-title').text().trim(),
     "vod_id": inReq.body.id,
-  }
-  
-  // 直接复制原 xzys.js 的网盘链接提取逻辑
-  let tracks = []
+  };
+
+  let tracks = [];
   $('.col-md-9 .article-box p').each((_, e) => {
-    const name = $(e).find('.btn-info').text()
-    const panShareUrl = $(e).find('a').attr('href')
-    
-    if (/夸克|阿里|UC|115|天翼/.test(name)) {
+    const name = $(e).find('.btn-info').text().trim();
+    const panShareUrl = $(e).find('button.btn-info').attr('data-pan'); // 修改此处
+
+    if (/夸克|阿里|UC|115|天翼/.test(name) && panShareUrl) {
       tracks.push({
-        name: name.trim(),
+        name: name,
         pan: panShareUrl,
-      })
+      });
     }
-  })
-  
-  // 如果找到链接，使用第一个链接获取播放信息
+  });
+
   if (tracks.length > 0) {
     const vodFromUrl = await _detail(tracks[0].pan);
-    if (vodFromUrl){
+    if (vodFromUrl) {
       vod.vod_play_from = vodFromUrl.froms;
       vod.vod_play_url = vodFromUrl.urls;
     }
   }
-  
+
   return {
     list: [vod],
   };
