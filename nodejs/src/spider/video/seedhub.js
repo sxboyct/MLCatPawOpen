@@ -41,12 +41,39 @@ async function home(_inReq, _outResp) {
         type_id: tab.ext.id,
         type_name: tab.name
     }));
-    
-    let filterObj = {};
-    return ({
-        class: classes,
-        filters: filterObj,
+
+    const url = appConfig.site; // 访问首页
+    const { data } = await req.get(url, {
+        headers: {
+            'User-Agent': PC_UA,
+        },
     });
+
+    const $ = new jsoup().pq(data);
+    const videos = $('.cover');
+    const cards = [];
+
+    videos.each((_, e) => {
+        const href = $(e).find('a').attr('href');
+        const title = $(e).find('a img').attr('alt');
+        const cover = $(e).find('a img').attr('src');
+
+        cards.push({
+            vod_id: href,
+            vod_name: title,
+            vod_pic: cover,
+            vod_remarks: '',
+            ext: {
+                url: `${appConfig.site}${href}`,
+            },
+        });
+    });
+
+    return {
+        class: classes,  // 仍然返回分类信息
+        filters: {},      // 保持筛选器为空
+        list: cards,      // 添加首页影片列表
+    };
 }
 
 async function category(inReq, _outResp) {
