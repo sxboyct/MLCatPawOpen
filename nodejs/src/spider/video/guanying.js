@@ -6,9 +6,9 @@ import { PC_UA } from "../../util/misc.js";
 const appConfig = {
   site: 'https://www.gyg.la/',
   tabs: [
-    { type_id: 'mv/', type_name: '电影' },
-    { type_id: 'tv/', type_name: '剧集' },
-    { type_id: 'ac/', type_name: '动漫' }
+    { type_id: 'mv', type_name: '电影' },
+    { type_id: 'tv', type_name: '剧集' },
+    { type_id: 'ac', type_name: '动漫' }
   ]
 };
 
