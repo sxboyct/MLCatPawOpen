@@ -92,11 +92,11 @@ async function detail(inReq, _outResp) {
     const name = $(e).find('.btn-info').text().trim();
     const panShareUrl = $(e).find('button.btn-info').attr('data-pan'); // 修改此处
 
-    if (/夸克|阿里|UC|115|天翼/.test(name) && panShareUrl) {
-      tracks.push({
-        name: name,
-        pan: panShareUrl,
-      });
+    if (panShareUrl && panShareUrl.includes('quark')) {
+    tracks.push({
+      name: '夸克网盘', 
+      pan: panShareUrl,
+    });
     }
   });
 
