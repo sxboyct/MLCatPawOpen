@@ -79,39 +79,53 @@ async function category(inReq, _outResp) {
 }
 
 async function detail(inReq, _outResp) {
-  let html = await request(`${url}/${inReq.body.id}`);
-  const $ = pq(html);
-  
-  let vod = {
-    "vod_name": $('.article-title').text().trim(),
-    "vod_id": inReq.body.id,
-  };
+  try {
+    // 发送请求获取 HTML
+    const urlWithId = `${url}/${inReq.body.id}`;
+    const html = await request(urlWithId);
+    
+    // 解析 HTML
+    const $ = pq(html);
 
-  let tracks = [];
-  $('.col-md-9 .article-box p').each((_, e) => {
-    const name = $(e).find('.btn-info').text().trim();
-    const panShareUrl = $(e).find('button.btn-info').attr('data-pan'); // 修改此处
+    // 初始化 vod 对象
+    let vod = {
+      "vod_name": $('.article-title').text().trim(),
+      "vod_id": inReq.body.id,
+    };
 
-    if (panShareUrl && panShareUrl.includes('quark')) {
-    tracks.push({
-      name: '夸克网盘', 
-      pan: panShareUrl,
+    // 初始化 tracks 数组
+    let tracks = [];
+
+    // 遍历链接并筛选包含 'quark' 的链接
+    $('.div.tc-box p a').each((_, e) => {
+      const href = $(e).attr('href');
+
+      if (href && href.includes('quark')) {
+        tracks.push({
+          name: '夸克网盘', 
+          pan: href,
+        });
+      }
     });
-    }
-  });
 
-  if (tracks.length > 0) {
-    const vodFromUrl = await _detail(tracks[0].pan);
-    if (vodFromUrl) {
-      vod.vod_play_from = vodFromUrl.froms;
-      vod.vod_play_url = vodFromUrl.urls;
+    // 如果找到包含 'quark' 的链接，则进一步处理
+    if (tracks.length > 0) {
+      const vodFromUrl = await _detail(tracks[0].pan);
+      if (vodFromUrl) {
+        vod.vod_play_from = vodFromUrl.froms;
+        vod.vod_play_url = vodFromUrl.urls;
+      }
     }
+
+    // 返回结果
+    return {
+      list: [vod],
+    };
+  } catch (error) {
+    return { list: [] };
   }
-
-  return {
-    list: [vod],
-  };
 }
+
 
 async function search(inReq, _outResp) {
   const pg = inReq.body.page || 1;
