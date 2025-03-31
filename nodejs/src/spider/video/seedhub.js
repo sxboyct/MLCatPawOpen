@@ -123,20 +123,50 @@ async function detail(inReq, _outResp) {
     });
 
     const $ = new jsoup().pq(data);
+    
+    // 创建并初始化vod对象 - 添加基本信息
+    const vod = {
+        vod_id: inReq.body.id,
+        vod_name: $('.movie-info h1').text() || $('h1.title').text() || '',
+        vod_pic: $('.movie-poster img').attr('src') || $('.poster img').attr('src') || '',
+        vod_content: $('.movie-description').text() || $('.description').text() || '',
+        // 初始化其他可能的元数据
+        vod_year: $('.movie-info .year').text() || '',
+        vod_area: $('.movie-info .area').text() || '',
+        vod_director: $('.movie-info .director').text() || '',
+        vod_actor: $('.movie-info .actor').text() || ''
+    };
+
+    // 收集所有网盘分享链接
     const playlist = $('.pan-links');
-    let panShareUrl = '';
+    const shareUrls = [];
 
     playlist.each((_, e) => {
         $(e).find('li a').each((_, link) => {
-            panShareUrl = $(link).attr('data-link');
+            const panShareUrl = $(link).attr('data-link');
+            if (panShareUrl) {
+                shareUrls.push(panShareUrl);
+            }
         });
     });
 
-    const vodFromUrl = await _detail(panShareUrl);
-    
-    if (vodFromUrl){
-      vod.vod_play_from = vodFromUrl.froms;
-      vod.vod_play_url = vodFromUrl.urls;
+    // 如果找不到通过data-link属性的链接，尝试其他可能的选择器或属性
+    if (shareUrls.length === 0) {
+        $('.download-links a, .pan-links a').each((_, link) => {
+            const panShareUrl = $(link).attr('href') || $(link).attr('data-url');
+            if (panShareUrl && panShareUrl.includes('pan')) {
+                shareUrls.push(panShareUrl);
+            }
+        });
+    }
+
+    // 使用 _detail 处理网盘链接
+    if (shareUrls.length > 0) {
+        const vodFromUrl = await _detail(shareUrls);
+        if (vodFromUrl) {
+            vod.vod_play_from = vodFromUrl.froms;
+            vod.vod_play_url = vodFromUrl.urls;
+        }
     }
 
     return {
