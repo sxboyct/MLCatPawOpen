@@ -79,48 +79,36 @@ async function category(inReq, _outResp) {
 }
 
 async function detail(inReq, _outResp) {
-  try {
-    // 发送请求获取 HTML
-    const urlWithId = `${url}/${inReq.body.id}`;
-    const html = await request(urlWithId);
-    
-    // 解析 HTML
-    const $ = pq(html);
+  const url = await getCache(inReq.server);
+  let html = await request(`${url}/${inReq.body.id}`);
+  const $ = pq(html);
+  const videos = [];
 
-    // 初始化 vod 对象
-    let vod = {
-      "vod_name": $('.article-title').text().trim(),
-      "vod_id": inReq.body.id,
-    };
+  let vod = {
+    "vod_name": $('.article-title')[0].children[0].data.trim(),
+    "vod_id": `/${inReq.body.id}`,
+    "vod_content": $('div.topicContent p:nth-child(1)').text().replace(/\s+/g, ''),
+  };
 
-    // 初始化 tracks 数组
-    let tracks = [];
+  let content_html = $('.tc-box').html();
+  let link = content_html.match(/<a\s+(?:[^>]*?\s+)?href=["'](.*?quark.*?)["'][^>]*>/gi);
 
-    // 遍历链接并筛选包含 'quark' 的链接
-    $('.div.tc-box p a').each((_, e) => {
-      const href = $(e).attr('href');
-
-      if (href && href.includes('quark')) {
-        tracks.push({
-          name: '夸克网盘', 
-          pan: href,
-        });
+  if (link && link.length > 0) {
+    // 提取 a 标签中的 URL
+    link = link[0].match(/href=["'](.*?)["']/)[1];
+    if (isTyLink(link)) {
+      const vodFromUrl = await _detail(link);
+      if (vodFromUrl) {
+        vod.vod_play_from = '夸克网盘';
+        vod.vod_play_url = link; // 或者使用 vodFromUrl.urls
       }
-    });
-
-    // 如果找到包含 'quark' 的链接，则进一步处理
-    if (tracks.length > 0) {
-       vod.vod_play_from = '夸克网盘'; 
-       vod.vod_play_url = tracks[0].pan; // 直接使用提取的链接作为播放地址
-     }
-
-    // 返回结果
-    return {
-      list: [vod],
-    };
-  } catch (error) {
-    return { list: [] };
+    }
+    videos.push(vod);
   }
+
+  return {
+    list: videos,
+  };
 }
 
 
