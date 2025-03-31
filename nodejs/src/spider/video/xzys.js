@@ -110,12 +110,9 @@ async function detail(inReq, _outResp) {
 
     // 如果找到包含 'quark' 的链接，则进一步处理
     if (tracks.length > 0) {
-      const vodFromUrl = await _detail(tracks[0].pan);
-      if (vodFromUrl) {
-        vod.vod_play_from = vodFromUrl.froms;
-        vod.vod_play_url = vodFromUrl.urls;
-      }
-    }
+       vod.vod_play_from = '夸克网盘'; 
+       vod.vod_play_url = tracks[0].pan; // 直接使用提取的链接作为播放地址
+     }
 
     // 返回结果
     return {
@@ -125,6 +122,7 @@ async function detail(inReq, _outResp) {
     return { list: [] };
   }
 }
+
 
 
 async function search(inReq, _outResp) {
