@@ -134,12 +134,10 @@ async function detail(inReq, _outResp) {
 
     const vodFromUrl = await _detail(panShareUrl);
     
-    const vod = {
-        vod_id: inReq.body.id,
-        vod_name: $('h1').text().trim(),
-        vod_play_from: vodFromUrl ? vodFromUrl.froms : '',
-        vod_play_url: vodFromUrl ? vodFromUrl.urls : '',
-    };
+    if (vodFromUrl){
+      vod.vod_play_from = vodFromUrl.froms;
+      vod.vod_play_url = vodFromUrl.urls;
+    }
 
     return {
         list: [vod],
