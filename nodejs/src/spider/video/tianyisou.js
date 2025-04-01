@@ -112,7 +112,7 @@ async function search(inReq, _outResp) {
         "vod_name": $(each).find('template').first().text().trim(),
         "vod_id": path,
         "vod_remarks": '',
-        "vod_pic": ''
+        "vod_pic": 'https://www.tianyiso.com/favicon.ico'
       })
     }
   })
