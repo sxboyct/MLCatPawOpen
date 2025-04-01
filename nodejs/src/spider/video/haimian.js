@@ -86,25 +86,31 @@ async function detail(inReq, _outResp) {
   let html = await request(`${url}/${inReq.body.id}`)
   const $ = pq(html)
   let vod = {
-    "vod_name": $('.title')[0].children[0].data.trim(),
+    "vod_name": $('.movie-info a').attr('data-caption'),
     "vod_id": `/${inReq.body.id}`,
-    "vod_content": $('div.message.break-all p:nth-child(1)').text().replace(/\s+/g, ''),
   }
   let content_html = $('.message.break-all').html()
-  let link = content_html.match(/<a\s+(?:[^>]*?\s+)?href=["'](https?:\/\/cloud\.189\.cn\/[^"']*)["'][^>]*>/gi);
-  if (!link || link.length === 0) {
-    // 如果 a 标签匹配不到，尝试匹配 span 标签中的文本内容
-    link = content_html.match(/<span\s+style="color:\s*#0070C0;\s*">https?:\/\/cloud\.189\.cn\/[^<]*<\/span>/gi);
-    if (link && link.length > 0) {
-      // 提取 span 标签中的 URL
-      link = link[0].match(/https?:\/\/cloud\.189\.cn\/[^<]*/)[0];
-    } else {
-      link = content_html.match(/https?:\/\/cloud\.189\.cn\/[^<]*/)[0]
+  let linkMatch = content_html.match(/<a\s+(?:[^>]*?\s+)?href=["']([^"']*cloud\.189\.cn[^"']*)["'][^>]*>/i);
+let link = null;
+
+if (linkMatch) {
+    // 处理 outlink-https_3A_2F_2F 这种编码格式
+    link = linkMatch[1].replace(/outlink-https_3A_2F_2F/g, 'https://')
+                        .replace(/_2F/g, '/')
+                        .replace(/_2E/g, '.');
+} else {
+    // 如果 <a> 没有匹配到，则匹配 <span> 里面的链接
+    let spanMatch = content_html.match(/<span\s+style="color:\s*#0070C0;\s*">(https?:\/\/cloud\.189\.cn\/[^<]*)<\/span>/i);
+    if (spanMatch) {
+        link = spanMatch[1];
     }
-  } else {
-    // 提取 a 标签中的 URL
-    link = link[0].match(/https?:\/\/cloud\.189\.cn\/[^"']*/)[0];
-  }
+}
+
+// 备用匹配，防止 span 也没匹配到
+  if (!link) {
+    let directMatch = content_html.match(/https?:\/\/cloud\.189\.cn\/[^<]*/);
+    link = directMatch ? directMatch[0] : null;
+ }
   if (/cloud.189.cn/.test(link)) {
     const vodFromUrl = await _detail(link);
     if (vodFromUrl){
