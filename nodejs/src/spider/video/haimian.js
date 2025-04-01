@@ -125,15 +125,14 @@ async function search(inReq, _outResp) {
   let html = (await getHtml(`${url}/search.htm?keyword=${encodeURIComponent(decodeURIComponent(wd))}&page=${pg}`)).data
   const $ = pq(html)
   let videos = []
-  $('.topicList .topicItem').each((index, item) => {
-    const tag = $(item).find('.tag')[0];
-    const a = $(item).find('.title a:first')[0];
-    videos.push({
-        "vod_name": $(a).html().replace(/<[^>]*>/g, '').replace(/\s+/g, ''),
-        "vod_id": a.attribs.href,
-        "vod_remarks": '',
-        "vod_pic": `${url}/favicon.ico`
-      })
+  $('.list-unstyled.threadlist.mb-0 .media.thread.tap').each((index, item) => {
+  const a = $(item).find('.subject a:first')[0];
+  videos.push({
+    "vod_name": $(a).html().replace(/<[^>]*>/g, '').replace(/\s+/g, ''),
+    "vod_id": a.attribs.href,
+     "vod_remarks": '',
+     "vod_pic": `${url}/favicon.ico`
+   })
   })
   return {
     page: pg,
