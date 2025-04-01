@@ -2,6 +2,7 @@ import duoduo from "./spider/video/duoduo.js";
 import baseset from "./spider/video/baseset.js";
 import mogg from "./spider/video/mogg.js";
 import leijing from "./spider/video/leijing.js";
+import haimian from "./spider/video/haimian.js";
 import tianyisou from "./spider/video/tianyisou.js";
 import panta from "./spider/video/panta.js";
 import libo from "./spider/video/libo.js";
@@ -14,7 +15,7 @@ import tgsou from "./spider/video/tgsou.js";
 import douban from "./spider/video/douban.js";
 import guanying from "./spider/video/guanying.js";
 
-const spiders = [douban, duoduo, mogg, leijing, tianyisou, panta, libo, star2, seedhub, guanying, xzys, wogg, zhizhen, tgsou, baseset];
+const spiders = [douban, duoduo, mogg, leijing, haimian, tianyisou, panta, libo, star2, seedhub, guanying, xzys, wogg, zhizhen, tgsou, baseset];
 const spiderPrefix = '/spider';
 
 /**
