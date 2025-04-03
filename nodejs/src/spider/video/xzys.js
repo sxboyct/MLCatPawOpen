@@ -64,7 +64,7 @@ async function category(inReq, _outResp) {
     })
   })
   
-  const pageInfo = $('.pages')[0]
+  const pageInfo = $('.pagination .page-item')[0]
   const pageLinks = $(pageInfo).find('a')
   const lastPageLink = pageLinks.last()
   const totalPages = lastPageLink.length > 0 ? parseInt(lastPageLink.text()) : 1
