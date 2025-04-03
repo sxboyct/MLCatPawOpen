@@ -1,44 +1,90 @@
 import req from '../../util/req.js';
 import {init, proxy, play, detail as _detail} from '../../util/pan.js';
 import {jsoup} from "../../util/htmlParser.js";
-import {load} from 'cheerio';
+import axios from "axios";
 import {PC_UA} from "../../util/misc.js";
 
 const FIXED_PIC = 'https://bkimg.cdn.bcebos.com/pic/d1a20cf431adcbefe0769094aeaf2edda2cc9fe6'
-const url = 'https://xzys.fun'
 
-async function request(reqUrl, options = {}) {
-  const resp = await req.get(reqUrl, {
-    headers: {
-      'User-Agent': PC_UA,
-      ...options.headers
-    },
-    ...options
-  });
-  return resp.data;
+const appConfig = {
+	ver: 1,
+	title: 'star2',
+	site: 'https://1.star2.cn',
+	tabs: [
+		{
+			name: '电影',
+			ext: {
+				id: 'mv',
+			},
+		},
+		{
+			name: '国剧',
+			ext: {
+				id: 'ju',
+			},
+		},
+		{
+			name: '外剧',
+			ext: {
+				id: 'wj',
+			},
+		},
+		{
+			name: '韩日',
+			ext: {
+				id: 'rh',
+			},
+		},
+		{
+			name: '英美',
+			ext: {
+				id: 'ym',
+			},
+		},
+		{
+			name: '短劇',
+			ext: {
+				id: 'dj',
+			},
+		},
+		{
+			name: '动漫',
+			ext: {
+				id: 'dm',
+			},
+		},
+		{
+			name: '综艺',
+			ext: {
+				id: 'zy',
+			},
+		},
+	],
 }
 
 async function home(_inReq, _outResp) {
-  let classes = [
-    {type_id: 'dsj', type_name: '电视剧'},
-    {type_id: 'dy', type_name: '电影'},
-    {type_id: 'dm', type_name: '动漫'},
-    {type_id: 'jlp', type_name: '纪录片'},
-    {type_id: 'zy', type_name: '综艺'},
-  ];
-  let filterObj = {};
-  return ({
-    class: classes,
-    filters: filterObj,
-  });
+    let classes = appConfig.tabs.map(tab => ({
+        type_id: tab.ext.id,
+        type_name: tab.name
+    }));
+    
+    let filterObj = {};
+    return ({
+        class: classes,
+        filters: filterObj,
+    });
 }
 
 async function category(inReq, _outResp) {
     const pg = inReq.body.page || 1;
     const id = inReq.body.tid;
 
-    const categoryUrl = `${url}/${id}_${pg}`
-    const data = await request(categoryUrl);
+    const url = appConfig.site + `/${id}_${pg}`
+    const { data } = await req.get(url, {
+        headers: {
+            'User-Agent': PC_UA,
+        },
+    });
 
     const $ = new jsoup().pq(data);
 
@@ -57,9 +103,8 @@ async function category(inReq, _outResp) {
             vod_id: href,
             vod_name: dramaName,
             vod_remarks: remarks,
-            vod_pic: FIXED_PIC,
             ext: {
-                url: `${url}${href}`,
+                url: `${appConfig.site}${href}`,
             },
         });
     });
@@ -67,15 +112,17 @@ async function category(inReq, _outResp) {
     return {
         page: pg,
         pagecount: 1,
-        limit: 72,
-        total: 72,
         list: cards,
     };
 }
 
 async function detail(inReq, _outResp) {
-    const detailUrl = `${url}${inReq.body.id}`;
-    const data = await request(detailUrl);
+    const url = `${appConfig.site}${inReq.body.id}`;
+    const { data } = await req.get(url, {
+        headers: {
+            'User-Agent': PC_UA,
+        },
+    });
 
     const $ = new jsoup().pq(data);
 
@@ -90,9 +137,9 @@ async function detail(inReq, _outResp) {
     const vod = {
         vod_id: inReq.body.id,
         vod_name: $('h1').text().trim(),
+        vod_pic: FIXED_PIC,
         vod_play_from: vodFromUrl ? vodFromUrl.froms : '',
         vod_play_url: vodFromUrl ? vodFromUrl.urls : '',
-        vod_pic: FIXED_PIC,
     };
 
     return {
@@ -105,9 +152,13 @@ async function search(inReq, _outResp) {
     const wd = inReq.body.wd;
     
     let text = encodeURIComponent(wd);
-    let searchUrl = `${url}/search/?keyword=${text}&page=${pg}`
+    let url = `${appConfig.site}/search/?keyword=${text}&page=${pg}`
 
-    const data = await request(searchUrl);
+    const { data } = await req.get(url, {
+        headers: {
+            'User-Agent': PC_UA,
+        },
+    });
 
     const $ = new jsoup().pq(data);
     
@@ -125,17 +176,17 @@ async function search(inReq, _outResp) {
         cards.push({
             vod_id: href,
             vod_name: dramaName,
-            vod_remarks: remarks,
             vod_pic: FIXED_PIC,
+            vod_remarks: remarks,
             ext: {
-                url: `${url}${href}`,
+                url: `${appConfig.site}${href}`,
             },
         });
     });
 
     return {
         page: pg,
-        pagecount: cards.length < 10 ? pg : pg + 1,
+        pagecount: 1,
         list: cards,
     };
 }
@@ -143,7 +194,7 @@ async function search(inReq, _outResp) {
 export default {
     meta: {
         key: 'star2',
-        name: '星剧社(仅搜)',
+        name: '星剧社',
         type: 3,
     },
     api: async (fastify) => {
