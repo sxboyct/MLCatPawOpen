@@ -102,6 +102,7 @@ async function category(inReq, _outResp) {
         cards.push({
             vod_id: href,
             vod_name: dramaName,
+	    vod_pic: FIXED_PIC,
             vod_remarks: remarks,
             ext: {
                 url: `${appConfig.site}${href}`,
